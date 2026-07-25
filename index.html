@@ -363,6 +363,34 @@
     border-radius:6px;
     font-size:12.5px;
   }
+
+  /* ---- ongoing trip route ---- */
+  .route-svg{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    z-index:2;
+    pointer-events:none;
+  }
+  .route-line{
+    fill:none;
+    stroke:var(--accent2);
+    stroke-width:3;
+    stroke-dasharray:2 10;
+    stroke-linecap:round;
+    animation:route-flow 1.2s linear infinite;
+  }
+  @keyframes route-flow{
+    to{ stroke-dashoffset:-24; }
+  }
+  .pin-dest{
+    width:14px;height:14px;
+    border-radius:50%;
+    background:#ffffff;
+    border:3px solid var(--accent2);
+    box-shadow:0 1px 4px rgba(0,0,0,.15);
+  }
 </style>
 </head>
 <body>
@@ -399,12 +427,14 @@
         <span>Click anywhere on the map to drop the trip pin →</span>
         <button class="cancel" id="simCancel">Cancel</button>
       </div>
+      <svg class="route-svg" id="routeSvg"></svg>
       <!-- pins injected by JS -->
       <div class="legend">
         <span><div class="dot free"></div> Available driver</span>
         <span><div class="dot ongoing"></div> Busy driver</span>
         <span><div class="dot invited"></div> Invited driver</span>
         <span><div class="dot trip"></div> Trip pin</span>
+        <span><div class="dot" style="background:#fff;border:2px solid var(--accent2);"></div> Drop-off / route</span>
       </div>
     </div>
   </div>
@@ -430,7 +460,7 @@ const trips = [
   {id:'t2', name:'Trip #T-1043', status:'available', pickup:'Dokki, Tahrir St.', dropoff:'6th of October City', rider:'Ahmed R.', fare:'210 EGP', dist:'32 km', x:'20%', y:'70%'},
 ];
 const ongoingTrips = [
-  {id:'o1', name:'Trip #T-1039', status:'ongoing', pickup:'Zamalek', dropoff:'Heliopolis', rider:'Laila K.', fare:'95 EGP', dist:'11 km', driver:'Karim Youssef', x:'70%', y:'30%', eta:'8 min to drop-off'},
+  {id:'o1', name:'Trip #T-1039', status:'ongoing', pickup:'Zamalek', dropoff:'Heliopolis', rider:'Laila K.', fare:'95 EGP', dist:'11 km', driver:'Karim Youssef', x:'70%', y:'30%', dropoffX:'85%', dropoffY:'55%', eta:'8 min to drop-off'},
 ];
 
 let state = {
@@ -450,7 +480,7 @@ const presets = [
   {key:'tripClick', label:'3. Trip clicked'},
   {key:'searchRings', label:'4. Search → radius rings'},
   {key:'invited', label:'5. Invited driver'},
-  {key:'ongoing', label:'6. Ongoing trip'},
+  {key:'ongoing', label:'6. Ongoing trip + route'},
   {key:'simulate', label:'7. Simulate new trip'},
 ];
 const pickerEl = document.getElementById('statePicker');
@@ -609,11 +639,33 @@ function drawRings(map, x, y){
   });
 }
 
+function drawRoute(svg, map, x1pct, y1pct, x2pct, y2pct){
+  const rect=map.getBoundingClientRect();
+  const toPx=(pct, dim)=> (parseFloat(pct)/100) * dim;
+  const x1=toPx(x1pct, rect.width), y1=toPx(y1pct, rect.height);
+  const x2=toPx(x2pct, rect.width), y2=toPx(y2pct, rect.height);
+
+  svg.setAttribute('viewBox', `0 0 ${rect.width} ${rect.height}`);
+
+  // slight curve so the line reads as a route, not a straight ruler-line
+  const mx=(x1+x2)/2, my=(y1+y2)/2;
+  const dx=x2-x1, dy=y2-y1;
+  const curveOffset=0.15;
+  const cx=mx - dy*curveOffset, cy=my + dx*curveOffset;
+
+  const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+  path.setAttribute('d', `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`);
+  path.setAttribute('class','route-line');
+  svg.appendChild(path);
+}
+
 function renderMap(){
   const map=document.getElementById('mapArea');
   const banner=document.getElementById('simBanner');
-  // clear old pins/rings but keep searchbar + legend + banner
+  const routeSvg=document.getElementById('routeSvg');
+  // clear old pins/rings/route but keep searchbar + legend + banner + svg element itself
   [...map.querySelectorAll('.pin, .ring, .ring-label')].forEach(n=>n.remove());
+  routeSvg.innerHTML='';
 
   map.classList.toggle('sim-active', state.simMode);
   banner.style.display = state.simMode ? 'flex' : 'none';
@@ -644,6 +696,19 @@ function renderMap(){
 
     if(focused){
       drawRings(map, t.x, t.y);
+    }
+
+    if(t.status==='ongoing' && t.dropoffX && t.dropoffY){
+      // destination flag
+      const destPin=document.createElement('div');
+      destPin.className='pin';
+      destPin.style.left=t.dropoffX; destPin.style.top=t.dropoffY;
+      destPin.innerHTML=`<div class="pin-dest"></div><div class="pin-label">${t.dropoff}</div>`;
+      destPin.onclick=()=>{ if(state.simMode) return; state.selectedType='trip'; state.selectedId=t.id; setActivePreset(null); render(); };
+      map.appendChild(destPin);
+
+      // route line from current driver position to drop-off
+      drawRoute(routeSvg, map, t.x, t.y, t.dropoffX, t.dropoffY);
     }
   });
 
@@ -750,6 +815,7 @@ function renderRight(){
         ${it.status!=='ongoing' ? `<button class="primary">Search nearby drivers</button><button>Invite driver</button>` : `<button>Track live</button><button>Contact rider</button>`}
       </div>
       ${state.searchMode && state.searchedTrip===it.id ? `<div class="note"><b>Idea:</b> hitting search focuses the map on this pin and draws 3 dashed rings at 10 / 20 / 30 km, so you can see which drivers fall inside each radius before inviting one.</div>` : ''}
+      ${it.status==='ongoing' ? `<div class="note"><b>Idea:</b> once a trip is ongoing, the map draws the live route from the driver's current position to the drop-off pin, so the dispatcher can see progress at a glance instead of just an ETA number.</div>` : ''}
     `;
   }
 }
