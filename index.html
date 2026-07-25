@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dispatcher — layout idea</title>
+<style>
+  :root{
+    --bg:#0f1720;
+    --panel:#16212c;
+    --panel2:#1c2a37;
+    --line:#2a3a48;
+    --text:#e7edf2;
+    --muted:#8ea1b0;
+    --accent:#4fb0ff;
+    --ok:#3ecf8e;
+    --warn:#f0b23c;
+    --danger:#ef6b6b;
+    --invite:#b47bf0;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    font-size:14px;
+  }
+  /* ---- top bar ---- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 16px;
+    background:var(--panel);
+    border-bottom:1px solid var(--line);
+  }
+  .topbar h1{font-size:15px;margin:0;font-weight:600;letter-spacing:.02em;}
+  .topbar .sub{color:var(--muted);font-size:12px;}
+  .state-picker{display:flex;gap:6px;flex-wrap:wrap;}
+  .state-picker button{
+    background:var(--panel2);
+    border:1px solid var(--line);
+    color:var(--muted);
+    padding:6px 10px;
+    border-radius:6px;
+    font-size:12px;
+    cursor:pointer;
+  }
+  .state-picker button.active{
+    background:var(--accent);
+    color:#06131e;
+    border-color:var(--accent);
+    font-weight:600;
+  }
+
+  /* ---- layout ---- */
+  .layout{
+    display:grid;
+    grid-template-columns:250px 1fr 280px;
+    height:calc(100vh - 49px);
+  }
+  .left, .right{
+    background:var(--panel);
+    border-right:1px solid var(--line);
+    overflow-y:auto;
+  }
+  .right{
+    border-right:none;
+    border-left:1px solid var(--line);
+  }
+  .center{
+    position:relative;
+    background:#0c141c;
+    overflow:hidden;
+  }
+
+  /* ---- left panel tabs ---- */
+  .tabs{display:flex;border-bottom:1px solid var(--line);}
+  .tabs button{
+    flex:1;
+    background:none;
+    border:none;
+    color:var(--muted);
+    padding:10px 4px;
+    font-size:11px;
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+  }
+  .tabs button.active{color:var(--text);border-bottom:2px solid var(--accent);}
+  .list{padding:8px;}
+  .list-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:9px 8px;
+    border-radius:6px;
+    cursor:pointer;
+    margin-bottom:4px;
+  }
+  .list-item:hover{background:var(--panel2);}
+  .list-item.selected{background:var(--panel2);outline:1px solid var(--accent);}
+  .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+  .dot.free{background:var(--ok);}
+  .dot.trip{background:var(--accent);}
+  .dot.invited{background:var(--invite);}
+  .dot.ongoing{background:var(--warn);}
+  .item-text .name{font-weight:600;font-size:13px;}
+  .item-text .meta{color:var(--muted);font-size:11px;}
+  .panel-title{
+    padding:12px 12px 4px;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    color:var(--muted);
+  }
+  .count-pill{
+    background:var(--panel2);
+    border-radius:10px;
+    padding:1px 7px;
+    font-size:10px;
+    color:var(--muted);
+    margin-left:6px;
+  }
+
+  /* ---- map ---- */
+  .map{
+    position:absolute;inset:0;
+    background:
+      linear-gradient(var(--line) 1px, transparent 1px) 0 0/40px 40px,
+      linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0/40px 40px,
+      #0c141c;
+    opacity:1;
+  }
+  .searchbar{
+    position:absolute;
+    top:14px;left:14px;right:14px;
+    display:flex;
+    gap:8px;
+    z-index:5;
+  }
+  .searchbar input{
+    flex:1;
+    background:var(--panel);
+    border:1px solid var(--line);
+    color:var(--text);
+    padding:9px 12px;
+    border-radius:8px;
+    font-size:13px;
+  }
+  .searchbar button{
+    background:var(--accent);
+    border:none;
+    color:#06131e;
+    font-weight:600;
+    padding:9px 14px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:13px;
+  }
+  .legend{
+    position:absolute;
+    bottom:14px;left:14px;
+    background:rgba(22,33,44,.9);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:8px 10px;
+    font-size:11px;
+    color:var(--muted);
+    display:flex;
+    gap:12px;
+    z-index:5;
+  }
+  .legend span{display:flex;align-items:center;gap:5px;}
+
+  /* pins */
+  .pin{
+    position:absolute;
+    transform:translate(-50%,-50%);
+    cursor:pointer;
+    z-index:3;
+  }
+  .pin-driver{
+    width:0;height:0;
+    border-left:7px solid transparent;
+    border-right:7px solid transparent;
+    border-bottom:16px solid var(--ok);
+    filter:drop-shadow(0 0 4px rgba(62,207,142,.6));
+  }
+  .pin-driver.busy{border-bottom-color:var(--warn);filter:drop-shadow(0 0 4px rgba(240,178,60,.6));}
+  .pin-driver.invited{border-bottom-color:var(--invite);filter:drop-shadow(0 0 4px rgba(180,123,240,.6));}
+  .pin-trip{
+    width:16px;height:16px;
+    border-radius:50% 50% 50% 0;
+    background:var(--accent);
+    transform:translate(-50%,-100%) rotate(-45deg);
+    filter:drop-shadow(0 0 4px rgba(79,176,255,.6));
+  }
+  .pin-trip.focused{
+    background:#fff;
+    filter:drop-shadow(0 0 8px rgba(255,255,255,.9));
+  }
+  .pin-label{
+    position:absolute;
+    top:100%;left:50%;
+    transform:translateX(-50%);
+    white-space:nowrap;
+    font-size:10px;
+    color:var(--muted);
+    margin-top:2px;
+    background:rgba(12,20,28,.8);
+    padding:1px 5px;
+    border-radius:4px;
+  }
+  .ring{
+    position:absolute;
+    border:1.5px dashed var(--accent);
+    border-radius:50%;
+    transform:translate(-50%,-50%);
+    opacity:.55;
+    z-index:1;
+  }
+  .ring-label{
+    position:absolute;
+    color:var(--accent);
+    font-size:10px;
+    background:rgba(12,20,28,.85);
+    padding:1px 6px;
+    border-radius:4px;
+    transform:translate(-50%,-50%);
+    z-index:2;
+  }
+
+  /* ---- right panel ---- */
+  .right-empty{
+    padding:30px 16px;
+    color:var(--muted);
+    font-size:12px;
+    text-align:center;
+    line-height:1.6;
+  }
+  .detail-header{
+    padding:14px;
+    border-bottom:1px solid var(--line);
+  }
+  .detail-header .name{font-size:16px;font-weight:700;}
+  .badge{
+    display:inline-block;
+    font-size:10px;
+    padding:2px 8px;
+    border-radius:10px;
+    margin-top:6px;
+    font-weight:600;
+  }
+  .badge.free{background:rgba(62,207,142,.15);color:var(--ok);}
+  .badge.busy{background:rgba(240,178,60,.15);color:var(--warn);}
+  .badge.invited{background:rgba(180,123,240,.15);color:var(--invite);}
+  .badge.ongoing{background:rgba(240,178,60,.15);color:var(--warn);}
+  .badge.trip{background:rgba(79,176,255,.15);color:var(--accent);}
+  .detail-body{padding:14px;}
+  .field{margin-bottom:12px;}
+  .field .k{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em;}
+  .field .v{font-size:13.5px;margin-top:2px;}
+  .actions{display:flex;gap:8px;padding:0 14px 14px;flex-wrap:wrap;}
+  .actions button{
+    flex:1;
+    min-width:100px;
+    padding:9px;
+    border-radius:6px;
+    border:1px solid var(--line);
+    background:var(--panel2);
+    color:var(--text);
+    font-size:12px;
+    cursor:pointer;
+  }
+  .actions button.primary{background:var(--accent);color:#06131e;border-color:var(--accent);font-weight:600;}
+
+  .note{
+    margin:10px 14px;
+    padding:10px;
+    background:var(--panel2);
+    border:1px dashed var(--line);
+    border-radius:8px;
+    font-size:11.5px;
+    color:var(--muted);
+    line-height:1.5;
+  }
+  .note b{color:var(--text);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <h1>Dispatcher — layout idea</h1>
+    <div class="sub">click a state below to preview it — this is a clickable wireframe, not final UI</div>
+  </div>
+  <div class="state-picker" id="statePicker"></div>
+</div>
+
+<div class="layout">
+  <!-- LEFT: lists -->
+  <div class="left">
+    <div class="tabs" id="tabs">
+      <button data-tab="drivers" class="active">Drivers <span class="count-pill">3</span></button>
+      <button data-tab="trips">Trips <span class="count-pill">2</span></button>
+      <button data-tab="ongoing">Ongoing <span class="count-pill">1</span></button>
+      <button data-tab="invited">Invited <span class="count-pill">1</span></button>
+    </div>
+    <div class="list" id="listArea"></div>
+  </div>
+
+  <!-- CENTER: map -->
+  <div class="center">
+    <div class="map" id="mapArea">
+      <div class="searchbar">
+        <input id="searchInput" placeholder="Search a trip by name or pickup…" value="">
+        <button id="searchBtn">Search</button>
+      </div>
+      <!-- pins injected by JS -->
+      <div class="legend">
+        <span><div class="dot free"></div> Available driver</span>
+        <span><div class="dot ongoing"></div> Busy driver</span>
+        <span><div class="dot invited"></div> Invited driver</span>
+        <span><div class="dot trip"></div> Trip pin</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: details -->
+  <div class="right" id="rightPanel">
+    <div class="right-empty">Nothing selected yet.<br>Click a driver or a trip — from the list or the map — to see details here.</div>
+  </div>
+</div>
+
+<script>
+/* ---------- fake data ---------- */
+const drivers = [
+  {id:'d1', name:'Omar Hassan', status:'free', car:'Toyota Corolla · 2019', plate:'ع ب د 1234', rating:4.8, x:'28%', y:'40%', phone:'+20 100 111 2222', lastTrip:'12 min ago'},
+  {id:'d2', name:'Mostafa Adel', status:'free', car:'Hyundai Elantra · 2021', plate:'ط س ن 5567', rating:4.6, x:'55%', y:'62%', phone:'+20 111 222 3333', lastTrip:'40 min ago'},
+  {id:'d3', name:'Karim Youssef', status:'busy', car:'Kia Cerato · 2020', plate:'س ي د 8842', rating:4.9, x:'70%', y:'30%', phone:'+20 122 333 4444', lastTrip:'on trip now'},
+];
+const invitedDrivers = [
+  {id:'i1', name:'Sherif Nabil', status:'invited', car:'Chevrolet Optra · 2018', plate:'ن ص ر 9012', rating:4.5, x:'40%', y:'22%', phone:'+20 155 444 5555', invitedFor:'Trip #T-1042', sentAgo:'2 min ago'},
+];
+const trips = [
+  {id:'t1', name:'Trip #T-1042', status:'available', pickup:'Maadi, Corniche St.', dropoff:'Nasr City, Abbas El Akkad', rider:'Nourhan S.', fare:'120 EGP', dist:'14.2 km', x:'46%', y:'34%'},
+  {id:'t2', name:'Trip #T-1043', status:'available', pickup:'Dokki, Tahrir St.', dropoff:'6th of October City', rider:'Ahmed R.', fare:'210 EGP', dist:'32 km', x:'20%', y:'70%'},
+];
+const ongoingTrips = [
+  {id:'o1', name:'Trip #T-1039', status:'ongoing', pickup:'Zamalek', dropoff:'Heliopolis', rider:'Laila K.', fare:'95 EGP', dist:'11 km', driver:'Karim Youssef', x:'70%', y:'30%', eta:'8 min to drop-off'},
+];
+
+let state = {
+  tab:'drivers',
+  selectedType:null, // 'driver' | 'trip'
+  selectedId:null,
+  searchMode:false,
+  searchedTrip:null,
+};
+
+/* ---------- state picker (preset scenarios) ---------- */
+const presets = [
+  {key:'browse', label:'1. Browsing lists'},
+  {key:'driverClick', label:'2. Driver clicked'},
+  {key:'tripClick', label:'3. Trip clicked'},
+  {key:'searchRings', label:'4. Search → radius rings'},
+  {key:'invited', label:'5. Invited driver'},
+  {key:'ongoing', label:'6. Ongoing trip'},
+];
+const pickerEl = document.getElementById('statePicker');
+presets.forEach(p=>{
+  const b=document.createElement('button');
+  b.textContent=p.label;
+  b.onclick=()=>applyPreset(p.key);
+  b.dataset.key=p.key;
+  pickerEl.appendChild(b);
+});
+
+function setActivePreset(key){
+  [...pickerEl.children].forEach(b=>b.classList.toggle('active', b.dataset.key===key));
+}
+
+function applyPreset(key){
+  setActivePreset(key);
+  state.searchMode=false;
+  state.searchedTrip=null;
+  document.getElementById('searchInput').value='';
+  if(key==='browse'){ state.tab='drivers'; state.selectedType=null; state.selectedId=null; }
+  if(key==='driverClick'){ state.tab='drivers'; state.selectedType='driver'; state.selectedId='d1'; }
+  if(key==='tripClick'){ state.tab='trips'; state.selectedType='trip'; state.selectedId='t1'; }
+  if(key==='searchRings'){ state.tab='trips'; state.selectedType='trip'; state.selectedId='t2'; state.searchMode=true; state.searchedTrip='t2'; document.getElementById('searchInput').value='Trip #T-1043'; }
+  if(key==='invited'){ state.tab='invited'; state.selectedType='driver'; state.selectedId='i1'; }
+  if(key==='ongoing'){ state.tab='ongoing'; state.selectedType='trip'; state.selectedId='o1'; }
+  render();
+}
+
+/* ---------- tabs ---------- */
+document.getElementById('tabs').addEventListener('click', e=>{
+  const btn=e.target.closest('button');
+  if(!btn) return;
+  state.tab=btn.dataset.tab;
+  setActivePreset(null);
+  render();
+});
+
+/* ---------- search ---------- */
+document.getElementById('searchBtn').addEventListener('click', ()=>{
+  const val=document.getElementById('searchInput').value.trim().toLowerCase();
+  const all=[...trips, ...ongoingTrips];
+  const found = all.find(t=>t.name.toLowerCase().includes(val));
+  if(found){
+    state.searchMode=true;
+    state.searchedTrip=found.id;
+    state.selectedType='trip';
+    state.selectedId=found.id;
+  } else {
+    state.searchMode=false;
+    state.searchedTrip=null;
+  }
+  setActivePreset(null);
+  render();
+});
+
+/* ---------- render list ---------- */
+function renderList(){
+  const area=document.getElementById('listArea');
+  area.innerHTML='';
+  [...document.querySelectorAll('#tabs button')].forEach(b=>b.classList.toggle('active', b.dataset.tab===state.tab));
+
+  let items=[], type='driver';
+  if(state.tab==='drivers'){ items=drivers; type='driver'; }
+  if(state.tab==='trips'){ items=trips; type='trip'; }
+  if(state.tab==='ongoing'){ items=ongoingTrips; type='trip'; }
+  if(state.tab==='invited'){ items=invitedDrivers; type='driver'; }
+
+  items.forEach(it=>{
+    const row=document.createElement('div');
+    row.className='list-item'+(state.selectedId===it.id?' selected':'');
+    const dotClass = it.status==='free'?'free': it.status==='busy'?'ongoing': it.status==='invited'?'invited': it.status==='ongoing'?'ongoing':'trip';
+    row.innerHTML=`
+      <div class="dot ${dotClass}"></div>
+      <div class="item-text">
+        <div class="name">${it.name}</div>
+        <div class="meta">${type==='driver' ? (it.car||'') : (it.pickup+' → '+it.dropoff)}</div>
+      </div>`;
+    row.onclick=()=>{
+      state.selectedType=type;
+      state.selectedId=it.id;
+      setActivePreset(null);
+      render();
+    };
+    area.appendChild(row);
+  });
+}
+
+/* ---------- render map ---------- */
+function renderMap(){
+  const map=document.getElementById('mapArea');
+  // clear old pins/rings but keep searchbar + legend
+  [...map.querySelectorAll('.pin, .ring, .ring-label')].forEach(n=>n.remove());
+
+  const allDrivers=[...drivers, ...invitedDrivers];
+  allDrivers.forEach(d=>{
+    const pin=document.createElement('div');
+    pin.className='pin';
+    pin.style.left=d.x; pin.style.top=d.y;
+    const cls = d.status==='busy'?'busy': d.status==='invited'?'invited':'';
+    pin.innerHTML=`<div class="pin-driver ${cls}"></div><div class="pin-label">${d.name.split(' ')[0]}</div>`;
+    pin.onclick=()=>{ state.selectedType='driver'; state.selectedId=d.id; setActivePreset(null); render(); };
+    map.appendChild(pin);
+  });
+
+  const allTrips=[...trips, ...ongoingTrips];
+  allTrips.forEach(t=>{
+    const pin=document.createElement('div');
+    pin.className='pin';
+    pin.style.left=t.x; pin.style.top=t.y;
+    const focused = state.searchMode && state.searchedTrip===t.id;
+    pin.innerHTML=`<div class="pin-trip ${focused?'focused':''}"></div><div class="pin-label">${t.name}</div>`;
+    pin.onclick=()=>{ state.selectedType='trip'; state.selectedId=t.id; setActivePreset(null); render(); };
+    map.appendChild(pin);
+
+    if(focused){
+      // draw 3 concentric rings: 10 / 20 / 30 km scaled arbitrarily for the mock
+      const radii=[70,140,210]; // px, representing 10/20/30 km
+      radii.forEach((r,i)=>{
+        const ring=document.createElement('div');
+        ring.className='ring';
+        ring.style.left=t.x; ring.style.top=t.y;
+        ring.style.width=r*2+'px'; ring.style.height=r*2+'px';
+        map.appendChild(ring);
+
+        const lbl=document.createElement('div');
+        lbl.className='ring-label';
+        lbl.textContent=(10*(i+1))+' km';
+        lbl.style.left=t.x;
+        lbl.style.top=`calc(${t.y} - ${r}px)`;
+        map.appendChild(lbl);
+      });
+    }
+  });
+}
+
+/* ---------- render right panel ---------- */
+function findById(id){
+  return [...drivers, ...invitedDrivers, ...trips, ...ongoingTrips].find(x=>x.id===id);
+}
+
+function renderRight(){
+  const panel=document.getElementById('rightPanel');
+  if(!state.selectedId){
+    panel.innerHTML=`<div class="right-empty">Nothing selected yet.<br>Click a driver or a trip — from the list or the map — to see details here.</div>`;
+    return;
+  }
+  const it=findById(state.selectedId);
+  if(!it){ panel.innerHTML=`<div class="right-empty">Not found.</div>`; return; }
+
+  if(state.selectedType==='driver'){
+    const badgeClass = it.status==='free'?'free': it.status==='busy'?'busy':'invited';
+    const badgeText = it.status==='free'?'Available': it.status==='busy'?'On a trip':'Invite sent';
+    panel.innerHTML=`
+      <div class="detail-header">
+        <div class="name">${it.name}</div>
+        <span class="badge ${badgeClass}">${badgeText}</span>
+      </div>
+      <div class="detail-body">
+        <div class="field"><div class="k">Vehicle</div><div class="v">${it.car}</div></div>
+        <div class="field"><div class="k">Plate</div><div class="v">${it.plate}</div></div>
+        <div class="field"><div class="k">Rating</div><div class="v">★ ${it.rating}</div></div>
+        <div class="field"><div class="k">Phone</div><div class="v">${it.phone}</div></div>
+        ${it.invitedFor ? `<div class="field"><div class="k">Invited for</div><div class="v">${it.invitedFor} · sent ${it.sentAgo}</div></div>` : `<div class="field"><div class="k">Last activity</div><div class="v">${it.lastTrip}</div></div>`}
+      </div>
+      <div class="actions">
+        ${it.status==='free' ? `<button class="primary">Assign to trip</button><button>Call</button>` : ''}
+        ${it.status==='invited' ? `<button class="primary">Resend invite</button><button>Cancel invite</button>` : ''}
+        ${it.status==='busy' ? `<button>View current trip</button><button>Call</button>` : ''}
+      </div>
+      <div class="note"><b>Idea:</b> this panel reuses the same layout for every driver — only the badge color and action buttons change depending on status (free / busy / invited).</div>
+    `;
+  } else {
+    const badgeText = it.status==='ongoing' ? 'Ongoing' : 'Awaiting driver';
+    panel.innerHTML=`
+      <div class="detail-header">
+        <div class="name">${it.name}</div>
+        <span class="badge ${it.status==='ongoing'?'ongoing':'trip'}">${badgeText}</span>
+      </div>
+      <div class="detail-body">
+        <div class="field"><div class="k">Rider</div><div class="v">${it.rider}</div></div>
+        <div class="field"><div class="k">Pickup</div><div class="v">${it.pickup}</div></div>
+        <div class="field"><div class="k">Drop-off</div><div class="v">${it.dropoff}</div></div>
+        <div class="field"><div class="k">Distance / Fare</div><div class="v">${it.dist} · ${it.fare}</div></div>
+        ${it.driver ? `<div class="field"><div class="k">Driver</div><div class="v">${it.driver}</div></div>` : ''}
+        ${it.eta ? `<div class="field"><div class="k">ETA</div><div class="v">${it.eta}</div></div>` : ''}
+      </div>
+      <div class="actions">
+        ${it.status!=='ongoing' ? `<button class="primary">Search nearby drivers</button><button>Invite driver</button>` : `<button>Track live</button><button>Contact rider</button>`}
+      </div>
+      ${state.searchMode && state.searchedTrip===it.id ? `<div class="note"><b>Idea:</b> hitting search focuses the map on this pin and draws 3 dashed rings at 10 / 20 / 30 km, so you can see which drivers fall inside each radius before inviting one.</div>` : ''}
+    `;
+  }
+}
+
+function render(){
+  renderList();
+  renderMap();
+  renderRight();
+}
+applyPreset('browse');
+</script>
+</body>
+</html>
