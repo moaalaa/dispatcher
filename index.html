@@ -5,17 +5,19 @@
 <title>Dispatcher — layout idea</title>
 <style>
   :root{
-    --bg:#0f1720;
-    --panel:#16212c;
-    --panel2:#1c2a37;
-    --line:#2a3a48;
-    --text:#e7edf2;
-    --muted:#8ea1b0;
-    --accent:#4fb0ff;
-    --ok:#3ecf8e;
-    --warn:#f0b23c;
-    --danger:#ef6b6b;
-    --invite:#b47bf0;
+    --bg:#ffffff;
+    --panel:#ffffff;
+    --panel2:#f2f7f7;
+    --line:#e0e8e8;
+    --text:#132022;
+    --muted:#6b8082;
+    --accent:#00bbc2;
+    --accent2:#008f95;
+    --accent-grad:linear-gradient(135deg, #008f95, #00bbc2);
+    --ok:#1fa97a;
+    --warn:#d98a1f;
+    --danger:#e0555a;
+    --invite:#8a5fd6;
   }
   *{box-sizing:border-box;}
   body{
@@ -31,8 +33,9 @@
     align-items:center;
     justify-content:space-between;
     padding:10px 16px;
-    background:var(--panel);
+    background:#ffffff;
     border-bottom:1px solid var(--line);
+    box-shadow:0 1px 3px rgba(0,0,0,.04);
   }
   .topbar h1{font-size:15px;margin:0;font-weight:600;letter-spacing:.02em;}
   .topbar .sub{color:var(--muted);font-size:12px;}
@@ -47,9 +50,9 @@
     cursor:pointer;
   }
   .state-picker button.active{
-    background:var(--accent);
-    color:#06131e;
-    border-color:var(--accent);
+    background:var(--accent-grad);
+    color:#ffffff;
+    border-color:transparent;
     font-weight:600;
   }
 
@@ -60,7 +63,7 @@
     height:calc(100vh - 49px);
   }
   .left, .right{
-    background:var(--panel);
+    background:#ffffff;
     border-right:1px solid var(--line);
     overflow-y:auto;
   }
@@ -70,7 +73,7 @@
   }
   .center{
     position:relative;
-    background:#0c141c;
+    background:#f7fafa;
     overflow:hidden;
   }
 
@@ -128,7 +131,7 @@
     background:
       linear-gradient(var(--line) 1px, transparent 1px) 0 0/40px 40px,
       linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0/40px 40px,
-      #0c141c;
+      #f7fafa;
     opacity:1;
   }
   .searchbar{
@@ -140,27 +143,29 @@
   }
   .searchbar input{
     flex:1;
-    background:var(--panel);
+    background:#ffffff;
     border:1px solid var(--line);
     color:var(--text);
     padding:9px 12px;
     border-radius:8px;
     font-size:13px;
+    box-shadow:0 1px 3px rgba(0,0,0,.06);
   }
   .searchbar button{
-    background:var(--accent);
+    background:var(--accent-grad);
     border:none;
-    color:#06131e;
+    color:#ffffff;
     font-weight:600;
     padding:9px 14px;
     border-radius:8px;
     cursor:pointer;
     font-size:13px;
+    box-shadow:0 1px 3px rgba(0,143,149,.25);
   }
   .legend{
     position:absolute;
     bottom:14px;left:14px;
-    background:rgba(22,33,44,.9);
+    background:rgba(255,255,255,.92);
     border:1px solid var(--line);
     border-radius:8px;
     padding:8px 10px;
@@ -169,6 +174,7 @@
     display:flex;
     gap:12px;
     z-index:5;
+    box-shadow:0 1px 3px rgba(0,0,0,.06);
   }
   .legend span{display:flex;align-items:center;gap:5px;}
 
@@ -184,20 +190,21 @@
     border-left:7px solid transparent;
     border-right:7px solid transparent;
     border-bottom:16px solid var(--ok);
-    filter:drop-shadow(0 0 4px rgba(62,207,142,.6));
+    filter:drop-shadow(0 1px 3px rgba(31,169,122,.5));
   }
-  .pin-driver.busy{border-bottom-color:var(--warn);filter:drop-shadow(0 0 4px rgba(240,178,60,.6));}
-  .pin-driver.invited{border-bottom-color:var(--invite);filter:drop-shadow(0 0 4px rgba(180,123,240,.6));}
+  .pin-driver.busy{border-bottom-color:var(--warn);filter:drop-shadow(0 1px 3px rgba(217,138,31,.5));}
+  .pin-driver.invited{border-bottom-color:var(--invite);filter:drop-shadow(0 1px 3px rgba(138,95,214,.5));}
   .pin-trip{
     width:16px;height:16px;
     border-radius:50% 50% 50% 0;
-    background:var(--accent);
+    background:var(--accent-grad);
     transform:translate(-50%,-100%) rotate(-45deg);
-    filter:drop-shadow(0 0 4px rgba(79,176,255,.6));
+    filter:drop-shadow(0 1px 3px rgba(0,143,149,.5));
   }
   .pin-trip.focused{
-    background:#fff;
-    filter:drop-shadow(0 0 8px rgba(255,255,255,.9));
+    background:#ffffff;
+    border:2px solid var(--accent2);
+    filter:drop-shadow(0 0 6px rgba(0,187,194,.7));
   }
   .pin-label{
     position:absolute;
@@ -205,29 +212,32 @@
     transform:translateX(-50%);
     white-space:nowrap;
     font-size:10px;
-    color:var(--muted);
+    color:var(--text);
     margin-top:2px;
-    background:rgba(12,20,28,.8);
+    background:rgba(255,255,255,.92);
+    border:1px solid var(--line);
     padding:1px 5px;
     border-radius:4px;
   }
   .ring{
     position:absolute;
-    border:1.5px dashed var(--accent);
+    border:1.5px dashed var(--accent2);
     border-radius:50%;
     transform:translate(-50%,-50%);
-    opacity:.55;
+    opacity:.6;
     z-index:1;
   }
   .ring-label{
     position:absolute;
-    color:var(--accent);
+    color:var(--accent2);
     font-size:10px;
-    background:rgba(12,20,28,.85);
+    background:rgba(255,255,255,.92);
+    border:1px solid var(--line);
     padding:1px 6px;
     border-radius:4px;
     transform:translate(-50%,-50%);
     z-index:2;
+    font-weight:600;
   }
 
   /* ---- right panel ---- */
@@ -251,11 +261,11 @@
     margin-top:6px;
     font-weight:600;
   }
-  .badge.free{background:rgba(62,207,142,.15);color:var(--ok);}
-  .badge.busy{background:rgba(240,178,60,.15);color:var(--warn);}
-  .badge.invited{background:rgba(180,123,240,.15);color:var(--invite);}
-  .badge.ongoing{background:rgba(240,178,60,.15);color:var(--warn);}
-  .badge.trip{background:rgba(79,176,255,.15);color:var(--accent);}
+  .badge.free{background:rgba(31,169,122,.12);color:var(--ok);}
+  .badge.busy{background:rgba(217,138,31,.12);color:var(--warn);}
+  .badge.invited{background:rgba(138,95,214,.12);color:var(--invite);}
+  .badge.ongoing{background:rgba(217,138,31,.12);color:var(--warn);}
+  .badge.trip{background:rgba(0,187,194,.12);color:var(--accent2);}
   .detail-body{padding:14px;}
   .field{margin-bottom:12px;}
   .field .k{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em;}
@@ -272,7 +282,7 @@
     font-size:12px;
     cursor:pointer;
   }
-  .actions button.primary{background:var(--accent);color:#06131e;border-color:var(--accent);font-weight:600;}
+  .actions button.primary{background:var(--accent-grad);color:#ffffff;border-color:transparent;font-weight:600;}
 
   .note{
     margin:10px 14px;
@@ -285,6 +295,74 @@
     line-height:1.5;
   }
   .note b{color:var(--text);}
+
+  /* ---- new trip / simulation ---- */
+  .new-trip-btn{
+    display:block;
+    width:calc(100% - 16px);
+    margin:8px;
+    padding:8px;
+    border-radius:6px;
+    border:1px dashed var(--accent2);
+    background:transparent;
+    color:var(--accent2);
+    font-size:12px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .new-trip-btn:hover{background:rgba(0,143,149,.06);}
+  .sim-banner{
+    position:absolute;
+    top:60px;left:14px;right:14px;
+    z-index:6;
+    background:rgba(0,187,194,.1);
+    border:1px solid var(--accent2);
+    color:var(--accent2);
+    font-size:12px;
+    padding:8px 12px;
+    border-radius:8px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .sim-banner .cancel{
+    background:none;
+    border:1px solid var(--accent2);
+    color:var(--accent2);
+    border-radius:6px;
+    padding:3px 9px;
+    font-size:11px;
+    cursor:pointer;
+  }
+  .map.sim-active{cursor:crosshair;}
+  .pin-trip.draft{
+    background:#ffffff;
+    border:2px solid var(--accent2);
+    animation:pulse-draft 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse-draft{
+    0%,100%{filter:drop-shadow(0 0 3px rgba(0,143,149,.6));}
+    50%{filter:drop-shadow(0 0 9px rgba(0,187,194,.9));}
+  }
+  .form-row{margin-bottom:10px;}
+  .form-row label{
+    display:block;
+    color:var(--muted);
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    margin-bottom:4px;
+  }
+  .form-row input, .form-row select{
+    width:100%;
+    background:var(--bg);
+    border:1px solid var(--line);
+    color:var(--text);
+    padding:7px 9px;
+    border-radius:6px;
+    font-size:12.5px;
+  }
 </style>
 </head>
 <body>
@@ -306,6 +384,7 @@
       <button data-tab="ongoing">Ongoing <span class="count-pill">1</span></button>
       <button data-tab="invited">Invited <span class="count-pill">1</span></button>
     </div>
+    <div id="newTripBtnHolder"></div>
     <div class="list" id="listArea"></div>
   </div>
 
@@ -315,6 +394,10 @@
       <div class="searchbar">
         <input id="searchInput" placeholder="Search a trip by name or pickup…" value="">
         <button id="searchBtn">Search</button>
+      </div>
+      <div id="simBanner" style="display:none;" class="sim-banner">
+        <span>Click anywhere on the map to drop the trip pin →</span>
+        <button class="cancel" id="simCancel">Cancel</button>
       </div>
       <!-- pins injected by JS -->
       <div class="legend">
@@ -356,6 +439,8 @@ let state = {
   selectedId:null,
   searchMode:false,
   searchedTrip:null,
+  simMode:false,      // true while waiting for the dispatcher to click the map
+  draftPin:null,      // {x,y} once placed
 };
 
 /* ---------- state picker (preset scenarios) ---------- */
@@ -366,6 +451,7 @@ const presets = [
   {key:'searchRings', label:'4. Search → radius rings'},
   {key:'invited', label:'5. Invited driver'},
   {key:'ongoing', label:'6. Ongoing trip'},
+  {key:'simulate', label:'7. Simulate new trip'},
 ];
 const pickerEl = document.getElementById('statePicker');
 presets.forEach(p=>{
@@ -384,6 +470,8 @@ function applyPreset(key){
   setActivePreset(key);
   state.searchMode=false;
   state.searchedTrip=null;
+  state.simMode=false;
+  state.draftPin=null;
   document.getElementById('searchInput').value='';
   if(key==='browse'){ state.tab='drivers'; state.selectedType=null; state.selectedId=null; }
   if(key==='driverClick'){ state.tab='drivers'; state.selectedType='driver'; state.selectedId='d1'; }
@@ -391,6 +479,12 @@ function applyPreset(key){
   if(key==='searchRings'){ state.tab='trips'; state.selectedType='trip'; state.selectedId='t2'; state.searchMode=true; state.searchedTrip='t2'; document.getElementById('searchInput').value='Trip #T-1043'; }
   if(key==='invited'){ state.tab='invited'; state.selectedType='driver'; state.selectedId='i1'; }
   if(key==='ongoing'){ state.tab='ongoing'; state.selectedType='trip'; state.selectedId='o1'; }
+  if(key==='simulate'){
+    state.tab='trips'; state.selectedType=null; state.selectedId=null;
+    state.simMode=true;
+    state.draftPin={x:'52%', y:'48%'}; // pretend the dispatcher already clicked here
+    state.selectedType='draft';
+  }
   render();
 }
 
@@ -400,6 +494,37 @@ document.getElementById('tabs').addEventListener('click', e=>{
   if(!btn) return;
   state.tab=btn.dataset.tab;
   setActivePreset(null);
+  render();
+});
+
+/* ---------- new trip simulation ---------- */
+function enterSimMode(){
+  state.simMode=true;
+  state.draftPin=null;
+  state.selectedType=null;
+  state.selectedId=null;
+  setActivePreset(null);
+  render();
+}
+function exitSimMode(){
+  state.simMode=false;
+  state.draftPin=null;
+  if(state.selectedType==='draft'){ state.selectedType=null; state.selectedId=null; }
+  setActivePreset(null);
+  render();
+}
+document.getElementById('simCancel').addEventListener('click', exitSimMode);
+
+document.getElementById('mapArea').addEventListener('click', e=>{
+  if(!state.simMode) return;
+  // ignore clicks on existing pins/buttons/inputs — only bare map clicks place a pin
+  if(e.target.closest('.pin') || e.target.closest('.searchbar') || e.target.closest('.sim-banner') || e.target.closest('.legend')) return;
+  const rect=e.currentTarget.getBoundingClientRect();
+  const xPct=((e.clientX-rect.left)/rect.width*100).toFixed(1)+'%';
+  const yPct=((e.clientY-rect.top)/rect.height*100).toFixed(1)+'%';
+  state.draftPin={x:xPct, y:yPct};
+  state.selectedType='draft';
+  state.selectedId=null;
   render();
 });
 
@@ -424,8 +549,19 @@ document.getElementById('searchBtn').addEventListener('click', ()=>{
 /* ---------- render list ---------- */
 function renderList(){
   const area=document.getElementById('listArea');
+  const btnHolder=document.getElementById('newTripBtnHolder');
   area.innerHTML='';
+  btnHolder.innerHTML='';
   [...document.querySelectorAll('#tabs button')].forEach(b=>b.classList.toggle('active', b.dataset.tab===state.tab));
+
+  if(state.tab==='trips'){
+    const btn=document.createElement('button');
+    btn.className='new-trip-btn';
+    btn.textContent = state.simMode ? '◆ Placing trip pin on map…' : '+ New trip (simulate)';
+    btn.disabled = state.simMode;
+    btn.onclick=enterSimMode;
+    btnHolder.appendChild(btn);
+  }
 
   let items=[], type='driver';
   if(state.tab==='drivers'){ items=drivers; type='driver'; }
@@ -454,10 +590,36 @@ function renderList(){
 }
 
 /* ---------- render map ---------- */
+function drawRings(map, x, y){
+  // 3 concentric rings: 10 / 20 / 30 km, scaled arbitrarily for the mock
+  const radii=[70,140,210]; // px, representing 10/20/30 km
+  radii.forEach((r,i)=>{
+    const ring=document.createElement('div');
+    ring.className='ring';
+    ring.style.left=x; ring.style.top=y;
+    ring.style.width=r*2+'px'; ring.style.height=r*2+'px';
+    map.appendChild(ring);
+
+    const lbl=document.createElement('div');
+    lbl.className='ring-label';
+    lbl.textContent=(10*(i+1))+' km';
+    lbl.style.left=x;
+    lbl.style.top=`calc(${y} - ${r}px)`;
+    map.appendChild(lbl);
+  });
+}
+
 function renderMap(){
   const map=document.getElementById('mapArea');
-  // clear old pins/rings but keep searchbar + legend
+  const banner=document.getElementById('simBanner');
+  // clear old pins/rings but keep searchbar + legend + banner
   [...map.querySelectorAll('.pin, .ring, .ring-label')].forEach(n=>n.remove());
+
+  map.classList.toggle('sim-active', state.simMode);
+  banner.style.display = state.simMode ? 'flex' : 'none';
+  banner.querySelector('span').textContent = state.draftPin
+    ? 'Pin placed — drag not supported in this mock, click elsewhere to move it'
+    : 'Click anywhere on the map to drop the trip pin →';
 
   const allDrivers=[...drivers, ...invitedDrivers];
   allDrivers.forEach(d=>{
@@ -466,7 +628,7 @@ function renderMap(){
     pin.style.left=d.x; pin.style.top=d.y;
     const cls = d.status==='busy'?'busy': d.status==='invited'?'invited':'';
     pin.innerHTML=`<div class="pin-driver ${cls}"></div><div class="pin-label">${d.name.split(' ')[0]}</div>`;
-    pin.onclick=()=>{ state.selectedType='driver'; state.selectedId=d.id; setActivePreset(null); render(); };
+    pin.onclick=()=>{ if(state.simMode) return; state.selectedType='driver'; state.selectedId=d.id; setActivePreset(null); render(); };
     map.appendChild(pin);
   });
 
@@ -477,28 +639,23 @@ function renderMap(){
     pin.style.left=t.x; pin.style.top=t.y;
     const focused = state.searchMode && state.searchedTrip===t.id;
     pin.innerHTML=`<div class="pin-trip ${focused?'focused':''}"></div><div class="pin-label">${t.name}</div>`;
-    pin.onclick=()=>{ state.selectedType='trip'; state.selectedId=t.id; setActivePreset(null); render(); };
+    pin.onclick=()=>{ if(state.simMode) return; state.selectedType='trip'; state.selectedId=t.id; setActivePreset(null); render(); };
     map.appendChild(pin);
 
     if(focused){
-      // draw 3 concentric rings: 10 / 20 / 30 km scaled arbitrarily for the mock
-      const radii=[70,140,210]; // px, representing 10/20/30 km
-      radii.forEach((r,i)=>{
-        const ring=document.createElement('div');
-        ring.className='ring';
-        ring.style.left=t.x; ring.style.top=t.y;
-        ring.style.width=r*2+'px'; ring.style.height=r*2+'px';
-        map.appendChild(ring);
-
-        const lbl=document.createElement('div');
-        lbl.className='ring-label';
-        lbl.textContent=(10*(i+1))+' km';
-        lbl.style.left=t.x;
-        lbl.style.top=`calc(${t.y} - ${r}px)`;
-        map.appendChild(lbl);
-      });
+      drawRings(map, t.x, t.y);
     }
   });
+
+  if(state.draftPin){
+    const pin=document.createElement('div');
+    pin.className='pin';
+    pin.style.left=state.draftPin.x; pin.style.top=state.draftPin.y;
+    pin.innerHTML=`<div class="pin-trip draft"></div><div class="pin-label">New trip (draft)</div>`;
+    pin.onclick=(e)=>{ e.stopPropagation(); state.selectedType='draft'; state.selectedId=null; setActivePreset(null); render(); };
+    map.appendChild(pin);
+    drawRings(map, state.draftPin.x, state.draftPin.y);
+  }
 }
 
 /* ---------- render right panel ---------- */
@@ -508,6 +665,43 @@ function findById(id){
 
 function renderRight(){
   const panel=document.getElementById('rightPanel');
+
+  if(state.simMode || state.selectedType==='draft'){
+    if(!state.draftPin){
+      panel.innerHTML=`
+        <div class="detail-header">
+          <div class="name">New trip</div>
+          <span class="badge trip">Draft</span>
+        </div>
+        <div class="note" style="margin-top:10px;">Click anywhere on the map to place the pickup pin. Once it's placed, fill in the trip details here and the 3 radius rings (10 / 20 / 30 km) will draw around it automatically.</div>
+      `;
+      return;
+    }
+    panel.innerHTML=`
+      <div class="detail-header">
+        <div class="name">New trip</div>
+        <span class="badge trip">Draft — pin placed</span>
+      </div>
+      <div class="detail-body">
+        <div class="form-row"><label>Pickup address</label><input placeholder="e.g. Garden City, Qasr El Nil St."></div>
+        <div class="form-row"><label>Drop-off address</label><input placeholder="e.g. New Cairo, 90th St."></div>
+        <div class="form-row"><label>Rider name</label><input placeholder="e.g. Yasmin T."></div>
+        <div class="form-row"><label>Fare (EGP)</label><input placeholder="e.g. 150"></div>
+        <div class="form-row"><label>Search radius shown on map</label>
+          <select><option>0–30 km (3 rings)</option><option>0–15 km</option><option>Custom</option></select>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="primary">Create trip &amp; search drivers</button>
+        <button id="simCancelForm">Discard</button>
+      </div>
+      <div class="note"><b>Idea:</b> placing the pin draws the same 3 rings used by trip search (10 / 20 / 30 km) — so before the trip is even saved, the dispatcher can already see how many drivers fall in range.</div>
+    `;
+    const discard=document.getElementById('simCancelForm');
+    if(discard) discard.onclick=exitSimMode;
+    return;
+  }
+
   if(!state.selectedId){
     panel.innerHTML=`<div class="right-empty">Nothing selected yet.<br>Click a driver or a trip — from the list or the map — to see details here.</div>`;
     return;
